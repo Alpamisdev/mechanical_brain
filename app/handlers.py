@@ -101,7 +101,7 @@ async def word_to_db(message: Message, state: FSMContext):
     is_exists = await rq.set_word(user.id, data['word'], data['translation'])
     
     if not is_exists:
-        await message.answer(f"{LANGUAGES[lang_code]["word_allradey_excist"]}")
+        await message.answer(f'{LANGUAGES[lang_code]["word_allradey_excist"]}')
         await state.clear()
     else:
         
