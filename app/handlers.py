@@ -53,6 +53,7 @@ class AddWord(StatesGroup):
     translation = State()
 
 # Add Word (Handler for the "add_word" button)
+@router.message(Command('neword'))
 @router.message(lambda message: message.text and message.text in [
     LANGUAGES["kaa"]["add_word"],
     LANGUAGES["uz"]["add_word"],
@@ -105,7 +106,7 @@ async def word_to_db(message: Message, state: FSMContext):
         await state.clear()
     else:
         
-        await message.answer(f'{user.name} - {LANGUAGES[lang_code]["word_added"]}.\n{data["word"]} - {data["translation"]}')
+        await message.answer(f'{user.name} - {LANGUAGES[lang_code]["word_added"]}.\n{data["word"]} - {data["translation"]}\nFor adding new word command \\neword')
         
         # Make sure to get the word_id after adding it to the database
         word_id = await rq.get_word(user.id, data['word'])
