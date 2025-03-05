@@ -1,25 +1,20 @@
 import re
 import asyncio
 import datetime
+import logging
+from aiogram.exceptions import TelegramForbiddenError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 from app.database.requests import get_all_schedules_now, get_word_by_id, get_user_by_id, update_schedule_by_id
 from app.bot import bot
-from app.languages import LANGUAGES
-from app.state import user_language
 
 async def get_current_time():
     return datetime.datetime.now()
 
-
 def escape_markdown(text: str) -> str:
-    """
-    Escapes special characters in text for Telegram MarkdownV2.
-    """
     escape_chars = r'_*[]()~`>#+-=|{}.!'
     return re.sub(f"([{re.escape(escape_chars)}])", r"\\\1", text)
 
-
-# Asynchronous task to handle scheduled jobs
 async def async_task():
     try:
         data = await get_all_schedules_now()
@@ -29,92 +24,60 @@ async def async_task():
             print("No schedules to process.")
         else:
             for record in data:
-                word_data = await get_word_by_id(record.user_id, record.word_id)
-                user_data = await get_user_by_id(record.user_id)
+                try:
+                    # Stop repeating if stage is 6 or higher
+                    if record.stage >= 6:
+                        # print(f"Skipping word {record.word_id} for user {record.user_id} (Stage {record.stage})")
+                        continue  # Move to the next record
 
-                if record.stage == 1:  # First repetition
+                    word_data = await get_word_by_id(record.user_id, record.word_id)
+                    user_data = await get_user_by_id(record.user_id)
+
+                    message_text = (
+                        f"Repeat this *{escape_markdown(word_data.word)}*\n"
+                        f"Translation ||{escape_markdown(word_data.translation)}||"
+                    )
+
                     await bot.send_message(
                         chat_id=user_data.tg_id,
-                        text=(
-                            f"Repeat this *{escape_markdown(word_data.word)}*\n"
-                            f"Translation ||{escape_markdown(word_data.translation)}||"
-                        ),
+                        text=message_text,
                         parse_mode="MarkdownV2"
                     )
-                    # Update next repetition time to 2 minutes
-                    await update_schedule_by_id(
-                        record.id, record.user_id, record.word_id,
-                        2, time + datetime.timedelta(minutes=60)
-                    )
-                elif record.stage == 2:  # Second repetition
-                    await bot.send_message(
-                        chat_id=user_data.tg_id,
-                        text=(
-                            f"Repeat this *{escape_markdown(word_data.word)}*\n"
-                            f"Translation ||{escape_markdown(word_data.translation)}||"
-                        ),
-                        parse_mode="MarkdownV2"
-                    )
-                    # Optionally increase the interval further (e.g., 5 minutes)
-                    await update_schedule_by_id(
-                        record.id, record.user_id, record.word_id,
-                        3, time + datetime.timedelta(days=1)
-                    )
-                elif record.stage == 3:  # Second repetition
-                    await bot.send_message(
-                        chat_id=user_data.tg_id,
-                        text=(
-                            f"Repeat this *{escape_markdown(word_data.word)}*\n"
-                            f"Translation ||{escape_markdown(word_data.translation)}||"
-                        ),
-                        parse_mode="MarkdownV2"
-                    )
-                    # Optionally increase the interval further (e.g., 5 minutes)
-                    await update_schedule_by_id(
-                        record.id, record.user_id, record.word_id,
-                        4, time + datetime.timedelta(days=2)
-                    )
-                elif record.stage == 4:  # Second repetition
-                    await bot.send_message(
-                        chat_id=user_data.tg_id,
-                        text=(
-                            f"Repeat this *{escape_markdown(word_data.word)}*\n"
-                            f"Translation ||{escape_markdown(word_data.translation)}||"
-                        ),
-                        parse_mode="MarkdownV2"
-                    )
-                    # Optionally increase the interval further (e.g., 5 minutes)
-                    await update_schedule_by_id(
-                        record.id, record.user_id, record.word_id,
-                        5, time + datetime.timedelta(days=6)
-                    )
-                elif record.stage == 5:  # Second repetition
-                    await bot.send_message(
-                        chat_id=user_data.tg_id,
-                        text=(
-                            f"Repeat this *{escape_markdown(word_data.word)}*\n"
-                            f"Translation ||{escape_markdown(word_data.translation)}||"
-                        ),
-                        parse_mode="MarkdownV2"
-                    )
-                    # Optionally increase the interval further (e.g., 5 minutes)
-                    await update_schedule_by_id(
-                        record.id, record.user_id, record.word_id,
-                        6, time + datetime.timedelta(days=12)
-                    )
-                else:
-                    pass  # Handle further stages or stop repetitions if needed
+
+                    # Define stage-based repetition times
+                    stage_intervals = {
+                        1: datetime.timedelta(minutes=20),
+                        2: datetime.timedelta(minutes=60),
+                        3: datetime.timedelta(days=1),
+                        4: datetime.timedelta(days=2),
+                        5: datetime.timedelta(days=6)
+                    }
+
+                    next_stage = record.stage + 1
+                    next_interval = stage_intervals.get(record.stage, None)
+
+                    if next_interval:
+                        await update_schedule_by_id(
+                            record.id, record.user_id, record.word_id,
+                            next_stage, time + next_interval
+                        )
+                except TelegramForbiddenError:
+                    logging.warning(f"User {user_data.tg_id} has blocked the bot. Removing from DB.")
+                    # Here you can remove the user from your database if needed
+                except Exception as e:
+                    logging.error(f"Unexpected error while processing user {user_data.tg_id}: {e}", exc_info=True)
+
     except Exception as e:
-        print(f"Error in async_task: {e}")
+        logging.error(f"Critical error in async_task: {e}", exc_info=True)
 
     print("Async task completed.")
 
 # Main scheduler function
 async def scheduler_main():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(async_task, 'interval', seconds=60)  # Check for tasks every 15 seconds
+    scheduler.add_job(async_task, 'interval', seconds=60)  # Runs every 60 seconds
     scheduler.start()
 
     print("Scheduler started. Running in background.")
     while True:
-        await asyncio.sleep(3600)  # Keep the scheduler alive and prevent exit
+        await asyncio.sleep(3600)  # Keep the scheduler running
