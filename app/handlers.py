@@ -20,7 +20,83 @@ class FMessage(StatesGroup):
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     await rq.set_user(message.from_user.id, message.from_user.full_name)
+
+    text = (
+        "🌟 <b>Welcome!</b> 🌟\n\n"
+        
+        "🇬🇧 <b>English:</b>\n"
+        '"Hello! This bot will help you learn new words efficiently and remember them for a long time using the Ebbinghaus method."\n\n'
+
+        "🇺🇿 <b>O‘zbekcha:</b>\n"
+        '"Salom! Ushbu bot sizga yangi so‘zlarni samarali o‘rganishga va Ebbinghaus metodi orqali ularni yodda saqlashga yordam beradi."\n\n'
+
+        "🇷🇺 <b>Русский:</b>\n"
+        '"Привет! Этот бот поможет вам эффективно учить новые слова и запоминать их с помощью метода Эббингауза."\n\n'
+        
+        "🌍 <b>Qaraqalpaqsha:</b>\n"
+        '"Sálem! Bul bot sizge jańa sózlerdi nátiyjeli úyreniwge hám Ebbinghaus metodı menen eslewge járdem beredi."\n\n'
+        
+        "📖 <b>Instructions:</b>\n"
+        "📌 <b>Instruction for Using the Telegram Bot</b>\n"
+        '<a href="https://telegra.ph/Instruction-for-Using-the-Telegram-Bot-to-Memorize-Words-03-09">English</a>\n\n'
+        
+        "📌 <b>Telegram botdan foydalanish bo'yicha qo'llanma</b>\n"
+        '<a href="https://telegra.ph/Sozlarni-yodlash-uchun-Telegram-botidan-foydalanish-boyicha-qollanma-03-09">O\'zbek</a>\n\n'
+        
+        "📌 <b>Инструкция по использованию Telegram-бота</b>\n"
+        '<a href="https://telegra.ph/Instrukciya-po-ispolzovaniyu-Telegram-bota-dlya-zapominaniya-slov-03-09">Русский</a>\n\n'
+        
+        "📌 <b>Telegram bottan paydalanıw qollanbası</b>\n"
+        '<a href="https://telegra.ph/Telegram-bot-qollanbas%C4%B1-03-03">Qaraqalpaq</a>\n\n'
+        
+        "🚀 <b>Let’s make learning fun and effective!</b> 🚀"
+    )
+
+
+    await message.answer(
+        text=text,
+        parse_mode="HTML"
+    )
     await message.answer("Tildi tańlań / Tilni tanlang / Выбирайте язык:", reply_markup=await kb.language_set())
+
+@router.message(Command('help'))
+async def cmd_help(message: Message):
+
+    text = (
+        "🌟 <b>Welcome!</b> 🌟\n\n"
+        
+        "🇬🇧 <b>English:</b>\n"
+        '"Hello! This bot will help you learn new words efficiently and remember them for a long time using the Ebbinghaus method."\n\n'
+
+        "🇺🇿 <b>O‘zbekcha:</b>\n"
+        '"Salom! Ushbu bot sizga yangi so‘zlarni samarali o‘rganishga va Ebbinghaus metodi orqali ularni yodda saqlashga yordam beradi."\n\n'
+
+        "🇷🇺 <b>Русский:</b>\n"
+        '"Привет! Этот бот поможет вам эффективно учить новые слова и запоминать их с помощью метода Эббингауза."\n\n'
+        
+        "🌍 <b>Qaraqalpaqsha:</b>\n"
+        '"Sálem! Bul bot sizge jańa sózlerdi nátiyjeli úyreniwge hám Ebbinghaus metodı menen eslewge járdem beredi."\n\n'
+        
+        "📖 <b>Instructions:</b>\n"
+        "📌 <b>Instruction for Using the Telegram Bot</b>\n"
+        '<a href="https://telegra.ph/Instruction-for-Using-the-Telegram-Bot-to-Memorize-Words-03-09">English</a>\n\n'
+        
+        "📌 <b>Telegram botdan foydalanish bo'yicha qo'llanma</b>\n"
+        '<a href="https://telegra.ph/Sozlarni-yodlash-uchun-Telegram-botidan-foydalanish-boyicha-qollanma-03-09">O\'zbek</a>\n\n'
+        
+        "📌 <b>Инструкция по использованию Telegram-бота</b>\n"
+        '<a href="https://telegra.ph/Instrukciya-po-ispolzovaniyu-Telegram-bota-dlya-zapominaniya-slov-03-09">Русский</a>\n\n'
+        
+        "📌 <b>Telegram bottan paydalanıw qollanbası</b>\n"
+        '<a href="https://telegra.ph/Telegram-bot-qollanbas%C4%B1-03-03">Qaraqalpaq</a>\n\n'
+        
+        "🚀 <b>Let’s make learning fun and effective!</b> 🚀"
+    )
+
+    await message.answer(
+        text=text,
+        parse_mode="HTML"
+    )
 
 @router.message(Command('fm'))
 async def get_forward_message(message: Message, state: FSMContext):
