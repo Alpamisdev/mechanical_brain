@@ -4,16 +4,23 @@ from app.languages import LANGUAGES
 
 languages = ["Qaraqalpaq", "O'zbek", "Русский"]
 
-# Function to generate the language selection keyboard
 async def language_set():
-    keyboard = ReplyKeyboardBuilder()
+    kb = ReplyKeyboardBuilder()
     for language in languages:
-        keyboard.add(KeyboardButton(text=language))
-    return keyboard.adjust(3).as_markup(resize_keyboard=True)
+        kb.add(KeyboardButton(text=language))
+    return kb.as_markup(resize_keyboard=True)
 
-# Function to generate the main keyboard dynamically based on the selected language
 async def main_keyboard(lang_code):
-    return ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text=LANGUAGES[lang_code]["add_word"])],
-        [KeyboardButton(text=LANGUAGES[lang_code]["my_words"])]
-    ], resize_keyboard=True)
+    kb = ReplyKeyboardBuilder()
+    
+    # Create buttons
+    add_word_btn = KeyboardButton(text=LANGUAGES[lang_code]["add_word"])
+    my_words_btn = KeyboardButton(text=LANGUAGES[lang_code]["my_words"])
+    learned_words_btn = KeyboardButton(text=LANGUAGES[lang_code]["learned_words"])
+    words_this_month_btn = KeyboardButton(text=LANGUAGES[lang_code]["words_this_month"])
+    
+    # Add buttons in rows of 2
+    kb.row(add_word_btn, words_this_month_btn)
+    kb.row(learned_words_btn, my_words_btn)
+    
+    return kb.as_markup(resize_keyboard=True)

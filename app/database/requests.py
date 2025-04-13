@@ -106,3 +106,50 @@ async def update_schedule_by_id(id, user_id, word_id, stage, next_review_at):
             print(f"Schedule with ID {id} not found.")
 
 
+# code of v0
+async def get_learned_words(user_id):
+    """Get words with stage >= 6 (considered learned)"""
+    async with async_session() as session:
+        # First get all schedules with stage >= 6
+        schedules = await session.scalars(
+            select(RepetitionSchedule)
+            .where(and_(
+                RepetitionSchedule.user_id == user_id,
+                RepetitionSchedule.stage >= 6
+            ))
+        )
+        
+        learned_schedules = schedules.all()
+        
+        if not learned_schedules:
+            return []
+            
+        # Get the word IDs from the schedules
+        word_ids = [schedule.word_id for schedule in learned_schedules]
+        
+        # Get the actual words
+        words = await session.scalars(
+            select(Word)
+            .where(Word.id.in_(word_ids))
+        )
+        
+        return words.all()
+
+async def get_words_added_this_month(user_id):
+    """Get words added in the current month"""
+    async with async_session() as session:
+        # Get the current date and first day of the month
+        now = datetime.datetime.now()
+        first_day = datetime.datetime(now.year, now.month, 1)
+        
+        # Query words created this month
+        words = await session.scalars(
+            select(Word)
+            .where(and_(
+                Word.user_id == user_id,
+                Word.created_at >= first_day,
+                Word.created_at <= now
+            ))
+        )
+        
+        return words.all()

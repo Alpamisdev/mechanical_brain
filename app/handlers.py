@@ -10,6 +10,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from app.languages import LANGUAGES
 from app.state import user_language
+from app.utils import split_long_message  # Import the new utility function
 
 
 router = Router()
@@ -196,3 +197,101 @@ async def word_to_db(message: Message, state: FSMContext):
         await state.clear()
 
 
+# code of v0
+@router.message(lambda message: message.text and message.text in [
+    LANGUAGES["kaa"]["learned_words"],
+    LANGUAGES["uz"]["learned_words"],
+    LANGUAGES["ru"]["learned_words"]
+])
+async def learned_words(message: Message):
+    """Handler for the 'Learned Words' button"""
+    user = message.from_user.id
+    lang_code = user_language.get(message.from_user.id, "kaa")  # Default to "kaa" if not set
+    
+    # Get user ID from tg_id
+    user_data = await rq.get_user(user)
+    if not user_data:
+        return
+    
+    # Get learned words (stage >= 6)
+    words = await rq.get_learned_words(user_data.id)
+    
+    if not words or len(words) == 0:
+        await message.answer(LANGUAGES[lang_code]["no_learned_words"])
+        return
+    
+    # Format the message
+    message_to_send = f"🎓 {LANGUAGES[lang_code]['learned_words']}:\n"
+    for i, word in enumerate(words, 1):
+        message_to_send += f"\n{i}) {word.word} - {word.translation}"
+    
+    # Split the message if it's too long
+    message_parts = split_long_message(message_to_send)
+    
+    # Send each part as a separate message
+    for part in message_parts:
+        await message.answer(part)
+
+@router.message(lambda message: message.text and message.text in [
+    LANGUAGES["kaa"]["words_this_month"],
+    LANGUAGES["uz"]["words_this_month"],
+    LANGUAGES["ru"]["words_this_month"]
+])
+async def words_this_month(message: Message):
+    """Handler for the 'Words Added This Month' button"""
+    user = message.from_user.id
+    lang_code = user_language.get(message.from_user.id, "kaa")  # Default to "kaa" if not set
+    
+    # Get user ID from tg_id
+    user_data = await rq.get_user(user)
+    if not user_data:
+        return
+    
+    # Get words added this month
+    words = await rq.get_words_added_this_month(user_data.id)
+    
+    if not words or len(words) == 0:
+        await message.answer(LANGUAGES[lang_code]["no_words_this_month"])
+        return
+    
+    # Format the message
+    count = len(words)
+    message_to_send = f"📅 {LANGUAGES[lang_code]['words_added_this_month'].format(count=count)}:\n"
+    
+    for i, word in enumerate(words, 1):
+        message_to_send += f"\n{i}) {word.word} - {word.translation}"
+    
+    # Split the message if it's too long
+    message_parts = split_long_message(message_to_send)
+    
+    # Send each part as a separate message
+    for part in message_parts:
+        await message.answer(part)
+
+# Also update the my_words handler to use the same approach
+@router.message(lambda message: message.text and message.text in [
+    LANGUAGES["kaa"]["my_words"],
+    LANGUAGES["uz"]["my_words"],
+    LANGUAGES["ru"]["my_words"]
+])
+async def my_words(message: Message):
+    user = message.from_user.id
+    words = await rq.get_words_by_user(user)
+    
+    if not words or len(words) == 0:
+        lang_code = user_language.get(message.from_user.id, "kaa")
+        await message.answer(LANGUAGES[lang_code]["word_not_found"])
+        return
+        
+    message_to_send = ""
+    k = 0
+    for word in words:
+        k += 1
+        message_to_send += f"\n{k}) {word.word} - {word.translation}"
+    
+    # Split the message if it's too long
+    message_parts = split_long_message(message_to_send)
+    
+    # Send each part as a separate message
+    for part in message_parts:
+        await message.answer(part)
