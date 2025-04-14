@@ -20,8 +20,9 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     tg_id = mapped_column(BigInteger, unique=True, nullable=False)
-    name: Mapped[str] = mapped_column(String(100), nullable=True) # optional qiliw kerek
+    name: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at = mapped_column(DateTime, default=datetime.datetime.now())
+    last_active = mapped_column(DateTime, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
 
 class Word(Base):
     __tablename__ = 'words'
@@ -71,3 +72,31 @@ class SystemSetting(Base):
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+class CommandLog(Base):
+    __tablename__ = 'command_logs'
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    command: Mapped[str] = mapped_column(String(100))
+    executed_at = mapped_column(DateTime, default=datetime.datetime.now)
+
+class UserSession(Base):
+    __tablename__ = 'user_sessions'
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    session_start = mapped_column(DateTime, default=datetime.datetime.now)
+    session_end = mapped_column(DateTime, nullable=True)
+    duration_seconds = mapped_column(Integer, nullable=True)
+
+class DailyStatistic(Base):
+    __tablename__ = 'daily_statistics'
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    date = mapped_column(DateTime, default=datetime.datetime.now)
+    active_users = mapped_column(Integer, default=0)
+    new_users = mapped_column(Integer, default=0)
+    words_added = mapped_column(Integer, default=0)
+    words_learned = mapped_column(Integer, default=0)
+    total_commands = mapped_column(Integer, default=0)
