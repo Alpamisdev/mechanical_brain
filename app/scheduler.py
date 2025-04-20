@@ -21,7 +21,7 @@ async def async_task():
         time = await get_current_time()
 
         if not data:
-            print("No schedules to process.")
+            logging.info("No schedules to process.")
         else:
             for record in data:
                 try:
@@ -74,6 +74,8 @@ async def async_task():
 
 # Main scheduler function
 async def scheduler_main():
+    logging.info("Scheduler task has started.")
+    
     scheduler = AsyncIOScheduler()
     scheduler.add_job(async_task, 'interval', seconds=60)  # Runs every 60 seconds
     scheduler.start()

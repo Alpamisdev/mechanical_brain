@@ -45,7 +45,7 @@ async def main():
     asyncio.create_task(scheduler_main())  # Run the scheduler as a background task
 
     # Start polling the bot
-    await bot(DeleteWebhook(drop_pending_updates=True))
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
