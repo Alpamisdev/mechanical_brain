@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 
 from app.handlers import router as user_router
+from app.admin_commands import admin_router
+from app.send_ad import ad_router
 from app.scheduler import scheduler_main
 from app.bot import bot
 from app.database.models import async_main
@@ -14,6 +16,8 @@ from app.database.models import async_main
 from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types.error_event import ErrorEvent
 from aiogram.filters.exception import ExceptionTypeFilter
+
+from aiogram.fsm.storage.memory import MemoryStorage
 
 async def main():
     # Load environment variables
@@ -23,8 +27,10 @@ async def main():
     await async_main()
     
     # Set up the Dispatcher and include routers
-    dp = Dispatcher()
+    dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(user_router)
+    dp.include_router(ad_router)
+    dp.include_router(admin_router)
     
     @dp.error(ExceptionTypeFilter(TelegramForbiddenError))
     async def handle_forbidden_error(event: ErrorEvent):
