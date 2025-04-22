@@ -193,7 +193,7 @@ async def word_to_db(message: Message, state: FSMContext):
         word_id = await rq.get_word(user.id, data['word'])
         
         if word_id:
-            await rq.set_schedule(user.id, word_id, 1, datetime.datetime.now() + datetime.timedelta(minutes=20))
+            await rq.set_schedule(user.id, word_id, 1, datetime.datetime.now() + datetime.timedelta(minutes=1))
         else:
             await message.answer(f'{LANGUAGES[lang_code]["word_not_found"]}')
         
