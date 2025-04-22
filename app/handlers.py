@@ -193,7 +193,6 @@ async def word_to_db(message: Message, state: FSMContext):
         word_id = await rq.get_word(user.id, data['word'])
         
         if word_id:
-            # Set the initial schedule (next review in 2 minutes)
             await rq.set_schedule(user.id, word_id, 1, datetime.datetime.now() + datetime.timedelta(minutes=20))
         else:
             await message.answer(f'{LANGUAGES[lang_code]["word_not_found"]}')
@@ -217,7 +216,7 @@ async def learned_words(message: Message):
     if not user_data:
         return
     
-    # Get learned words (stage >= 6)
+    # Get learned words (stage >= 7)
     words = await rq.get_learned_words(user_data.id)
     
     if not words or len(words) == 0:
@@ -322,7 +321,7 @@ async def learned_words(message: Message):
     if not user_data:
         return
     
-    # Get learned words (stage >= 6)
+    # Get learned words (stage >= 7)
     words = await rq.get_learned_words(user_data.id)
     
     if not words or len(words) == 0:

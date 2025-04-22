@@ -25,8 +25,8 @@ async def async_task():
         else:
             for record in data:
                 try:
-                    # Stop repeating if stage is 6 or higher
-                    if record.stage >= 6:
+                    # Stop repeating if stage is 7 or higher
+                    if record.stage >= 7:
                         # print(f"Skipping word {record.word_id} for user {record.user_id} (Stage {record.stage})")
                         continue  # Move to the next record
 
@@ -34,7 +34,7 @@ async def async_task():
                     user_data = await get_user_by_id(record.user_id)
 
                     message_text = (
-                        f"Repeat this *{escape_markdown(word_data.word)}*\n"
+                        f"Repeat this *{escape_markdown(word_data.word)}*\n {record.stage}"
                         f"Translation ||{escape_markdown(word_data.translation)}||"
                     )
 
@@ -47,10 +47,11 @@ async def async_task():
                     # Define stage-based repetition times
                     stage_intervals = {
                         1: datetime.timedelta(minutes=20),
-                        2: datetime.timedelta(minutes=60),
+                        2: datetime.timedelta(hours=1),
                         3: datetime.timedelta(days=1),
                         4: datetime.timedelta(days=2),
-                        5: datetime.timedelta(days=6)
+                        5: datetime.timedelta(days=4),
+                        6: datetime.timedelta(days=7)
                     }
 
                     next_stage = record.stage + 1
@@ -62,8 +63,7 @@ async def async_task():
                             next_stage, time + next_interval
                         )
                 except TelegramForbiddenError:
-                    logging.warning(f"User {user_data.tg_id} has blocked the bot. Removing from DB.")
-                    # Here you can remove the user from your database if needed
+                    logging.warning(f"User {user_data.tg_id} has blocked the bot.")
                 except Exception as e:
                     logging.error(f"Unexpected error while processing user {user_data.tg_id}: {e}", exc_info=True)
 

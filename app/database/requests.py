@@ -112,14 +112,14 @@ async def update_schedule_by_id(id, user_id, word_id, stage, next_review_at):
 
 # code of v0
 async def get_learned_words(user_id):
-    """Get words with stage >= 6 (considered learned)"""
+    """Get words with stage >= 7 (considered learned)"""
     async with async_session() as session:
-        # First get all schedules with stage >= 6
+        # First get all schedules with stage >= 7
         schedules = await session.scalars(
             select(RepetitionSchedule)
             .where(and_(
                 RepetitionSchedule.user_id == user_id,
-                RepetitionSchedule.stage >= 6
+                RepetitionSchedule.stage >= 7
             ))
         )
         
@@ -159,14 +159,14 @@ async def get_words_added_this_month(user_id):
         return words.all()
 
 async def get_learned_words(user_id):
-    """Get words with stage >= 6 (considered learned)"""
+    """Get words with stage >= 7 (considered learned)"""
     async with async_session() as session:
-        # First get all schedules with stage >= 6
+        # First get all schedules with stage >= 7
         schedules = await session.scalars(
             select(RepetitionSchedule)
             .where(and_(
                 RepetitionSchedule.user_id == user_id,
-                RepetitionSchedule.stage >= 6
+                RepetitionSchedule.stage >= 7
             ))
         )
         
@@ -375,7 +375,7 @@ async def update_daily_statistics():
             select(func.count())
             .select_from(RepetitionSchedule)
             .where(and_(
-                RepetitionSchedule.stage >= 6,
+                RepetitionSchedule.stage >= 7,
                 RepetitionSchedule.next_review_at.between(today_start, today_end)
             ))
         )
@@ -457,12 +457,12 @@ async def get_comprehensive_statistics():
         )
         words_month = words_month_result.scalar() or 0
         
-        # Total learned words (stage >= 6)
+        # Total learned words (stage >= 7)
         learned_words_result = await session.execute(
             select(func.count())
             .select_from(RepetitionSchedule)
             .where(
-                RepetitionSchedule.stage >= 6
+                RepetitionSchedule.stage >= 7
             )
         )
         learned_words = learned_words_result.scalar() or 0
