@@ -34,7 +34,7 @@ async def async_task():
                     user_data = await get_user_by_id(record.user_id)
 
                     message_text = (
-                        f"Repeat this *{escape_markdown(word_data.word)}*\n {record.stage}"
+                        f"Repeat this *{escape_markdown(word_data.word)}*\n"
                         f"Translation ||{escape_markdown(word_data.translation)}||"
                     )
 
